@@ -9,12 +9,26 @@ window.ENV = {
   KEYCLOAK_REALM: '${KEYCLOAK_REALM:-your-realm}',
   KEYCLOAK_CLIENT: '${KEYCLOAK_CLIENT:-ecards-frontend}',
   API_URL: '${API_URL:-/api}',
-  SUPPORT_EMAIL: '${SUPPORT_EMAIL:-support@example.com}'
+  SUPPORT_EMAIL: '${SUPPORT_EMAIL:-support@example.com}',
+  SOCIAL_FACEBOOK: '${SOCIAL_FACEBOOK:-}',
+  SOCIAL_TWITTER: '${SOCIAL_TWITTER:-}',
+  SOCIAL_INSTAGRAM: '${SOCIAL_INSTAGRAM:-}',
+  SOCIAL_DISCORD: '${SOCIAL_DISCORD:-}',
+  SOCIAL_GITHUB: '${SOCIAL_GITHUB:-}',
+  SOCIAL_MASTODON: '${SOCIAL_MASTODON:-}'
 };
 EOF
 
 echo "Generated runtime config:"
 cat /usr/share/nginx/html/config.js
+
+# Copy default blocked agents config if not already present (not mounted)
+if [ ! -f /etc/nginx/blocked-agents.conf ]; then
+  echo "No custom blocked-agents.conf found, using default"
+  cp /etc/nginx/blocked-agents.conf.default /etc/nginx/blocked-agents.conf
+else
+  echo "Using mounted blocked-agents.conf"
+fi
 
 # Start nginx
 exec nginx -g "daemon off;"
