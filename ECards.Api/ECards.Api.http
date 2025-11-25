@@ -1,0 +1,7 @@
+@ECards.Api_HostAddress = http://localhost:5176
+
+GET {{ECards.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+

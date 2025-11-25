@@ -1,0 +1,88 @@
+services:
+  mariadb:
+    image: mariadb:10.11
+    container_name: ecards-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword123
+      MYSQL_DATABASE: ecards
+      MYSQL_USER: ecards
+      MYSQL_PASSWORD: ecards123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      # Run via shell so container environment variables (MYSQL_USER / MYSQL_PASSWORD)
+      # are available — uses non-root user defined in the service env.
+      # Use explicit --password and quoted variable expansion to avoid argument
+      # parsing issues (prevents username being interpreted as '-p').
+      # Use $$ to escape compose interpolation so the variables are expanded inside
+      # the container (docker-compose would otherwise try to substitute them on the host).
+      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=\"$${MYSQL_USER}\" --password=\"$${MYSQL_PASSWORD}\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: ./ECards.Api
+      dockerfile: Dockerfile
+    container_name: ecards-api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - App__Name=eCards
+      - ConnectionStrings__DefaultConnection=Server=mariadb;Port=3306;Database=ecards;User=ecards;Password=ecards123;
+      - Storage__CustomArtPath=/app/storage/custom
+      - Storage__PremadeArtPath=/app/storage/premade
+      - BaseUrl=http://localhost:80
+      - FrontendUrl=http://localhost:80
+      # OpenID Connect / OIDC settings (override in production with secure values)
+      - Authentication__Authority=https://auth.neillans.co.uk/realms/eCards
+      - Authentication__Audience=account
+      - Authentication__RequireHttpsMetadata=false
+      - Cors__AllowedOrigins__0=http://localhost:5173
+      - Cors__AllowedOrigins__1=http://localhost:3000
+      - Cors__AllowedOrigins__2=http://localhost:80
+      - Cors__AllowedOrigins__3=http://localhost
+      # SMTP Email settings
+      - Smtp__Host=
+      - Smtp__Port=465
+      - Smtp__EnableSsl=true
+      - Smtp__Username=
+      - Smtp__Password=
+      - Smtp__FromEmail=
+      - Smtp__FromName=
+    volumes:
+      - ecards_storage:/app/storage
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_KEYCLOAK_URL: "https://auth.neillans.co.uk/"
+        VITE_KEYCLOAK_REALM: "eCards"
+        VITE_KEYCLOAK_CLIENT: "eCards"
+    container_name: ecards-frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+      # Keycloak / OIDC client settings are injected at build-time via build.args
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
+    driver: local
+  ecards_storage:
+    driver: local
