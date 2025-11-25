@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ECards.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize(Policy = "AdminOnly")]
 public class AdminController : ControllerBase
 {

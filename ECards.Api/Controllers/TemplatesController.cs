@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ECards.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class TemplatesController : ControllerBase
 {
     private readonly ITemplateService _templateService;

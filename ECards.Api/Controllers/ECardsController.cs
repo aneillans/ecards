@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ECards.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class ECardsController : ControllerBase
 {
     private readonly Data.ECardsDbContext _context;

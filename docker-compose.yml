@@ -38,8 +38,9 @@ services:
       - ConnectionStrings__DefaultConnection=Server=mariadb;Port=3306;Database=ecards;User=ecards;Password=ecards123;
       - Storage__CustomArtPath=/app/storage/custom
       - Storage__PremadeArtPath=/app/storage/premade
-      # PathBase is empty for direct access; set to "/api" if behind a reverse proxy
-      - PathBase=
+      # PathBase should match the path prefix used by your reverse proxy (e.g., "/api")
+      # Set to "/api" for standard setup where API is accessed via /api/* paths
+      - PathBase=/api
       - BaseUrl=http://localhost:80
       - FrontendUrl=http://localhost:80
       # OpenID Connect / OIDC settings (override in production with secure values)
@@ -73,7 +74,7 @@ services:
     ports:
       - "80:80"
     environment:
-      # API_URL can be relative (/api) if behind reverse proxy, or absolute (http://localhost:5000/api)
+      # API_URL should include the PathBase prefix (e.g., /api)
       - API_URL=/api
       - KEYCLOAK_URL=https://auth.neillans.co.uk/
       - KEYCLOAK_REALM=eCards
