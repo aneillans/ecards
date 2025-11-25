@@ -93,6 +93,26 @@ nav {
   margin-top: auto;
 }
 
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.social-links a {
+  color: #666;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-links a:hover {
+  color: #667eea;
+  transform: translateY(-2px);
+}
+
 .card-container {
   background: white;
   border-radius: 16px;
