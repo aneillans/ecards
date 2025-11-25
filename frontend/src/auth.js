@@ -1,9 +1,9 @@
 import Keycloak from 'keycloak-js';
 
 const keycloakConfig = {
-  url: import.meta.env.VITE_KEYCLOAK_URL || 'https://your-keycloak.example/',
-  realm: import.meta.env.VITE_KEYCLOAK_REALM || 'your-realm',
-  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT || 'ecards-frontend'
+  url: window.ENV?.KEYCLOAK_URL || 'https://your-keycloak.example/',
+  realm: window.ENV?.KEYCLOAK_REALM || 'your-realm',
+  clientId: window.ENV?.KEYCLOAK_CLIENT || 'ecards-frontend'
 };
 
 const keycloak = new Keycloak(keycloakConfig);

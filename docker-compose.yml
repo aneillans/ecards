@@ -67,16 +67,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_KEYCLOAK_URL: "https://auth.neillans.co.uk/"
-        VITE_KEYCLOAK_REALM: "eCards"
-        VITE_KEYCLOAK_CLIENT: "eCards"
     container_name: ecards-frontend
     ports:
       - "80:80"
     environment:
       - VITE_API_URL=http://localhost:5000/api
-      # Keycloak / OIDC client settings are injected at build-time via build.args
+      - KEYCLOAK_URL=https://auth.neillans.co.uk/
+      - KEYCLOAK_REALM=eCards
+      - KEYCLOAK_CLIENT=eCards
     depends_on:
       - api
     restart: unless-stopped

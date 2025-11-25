@@ -2,14 +2,6 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
-# Build-time VITE_* args injected here so the Vite build embeds correct values
-ARG VITE_KEYCLOAK_URL
-ARG VITE_KEYCLOAK_REALM
-ARG VITE_KEYCLOAK_CLIENT
-ENV VITE_KEYCLOAK_URL=${VITE_KEYCLOAK_URL}
-ENV VITE_KEYCLOAK_REALM=${VITE_KEYCLOAK_REALM}
-ENV VITE_KEYCLOAK_CLIENT=${VITE_KEYCLOAK_CLIENT}
-
 # Copy package files
 COPY package*.json ./
 
@@ -31,6 +23,10 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
