@@ -23,15 +23,20 @@ export async function initAuth() {
     const baseUrl = window.location.origin + window.location.pathname;
     console.log('Keycloak config:', { baseUrl, config: keycloakConfig });
     
-    // Use login-required mode instead of check-sso to avoid slow SSO checks
-    // This will only authenticate when explicitly needed (when user clicks login)
+    // Check if we're returning from Keycloak redirect
+    const hasAuthParams = window.location.search.includes('code=') || 
+                          window.location.search.includes('state=');
+    
+    // Don't auto-redirect to login - users must click the login button
+    // Only check SSO if we're returning from auth flow
     const authenticated = await keycloak.init({ 
-      onLoad: 'check-sso',
+      onLoad: hasAuthParams ? 'check-sso' : undefined,
       pkceMethod: 'S256',
       checkLoginIframe: false, // Disable iframe check completely
       enableLogging: true, // Enable Keycloak logging for debugging
       flow: 'standard', // Use standard flow
-      silentCheckSsoFallback: false // Don't use iframe fallback
+      silentCheckSsoFallback: false, // Don't use iframe fallback
+      promiseType: 'native'
     });
     
     initialized = true;
