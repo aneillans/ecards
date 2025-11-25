@@ -66,10 +66,15 @@ export async function initAuth() {
 }
 
 export function login(redirectUri) {
-  // Use base URL without query params
-  const defaultRedirect = window.location.origin + window.location.pathname;
+  // Ensure we always pass a string URL
+  let redirect = redirectUri;
+  if (!redirect || typeof redirect !== 'string') {
+    redirect = window.location.origin + window.location.pathname;
+  }
+  
+  console.log('Login with redirectUri:', redirect);
   return keycloak.login({ 
-    redirectUri: redirectUri || defaultRedirect
+    redirectUri: redirect
   }); 
 }
 export function logout() { return keycloak.logout({ redirectUri: window.location.origin }); }

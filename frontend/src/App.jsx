@@ -58,8 +58,8 @@ function App() {
               {ready && loggedIn && hasRole('admin') && <Link to="/admin" className="nav-link">Admin</Link>}
               {ready && (
                 loggedIn
-                ? <button className="nav-link" onClick={logout}>Logout</button>
-                : <button className="nav-link" onClick={login}>Login</button>
+                ? <button className="nav-link" onClick={() => logout()}>Logout</button>
+                : <button className="nav-link" onClick={() => login()}>Login</button>
               )}
             </nav>
           </div>
