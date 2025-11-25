@@ -8,7 +8,8 @@ window.ENV = {
   KEYCLOAK_URL: '${KEYCLOAK_URL:-https://your-keycloak.example/}',
   KEYCLOAK_REALM: '${KEYCLOAK_REALM:-your-realm}',
   KEYCLOAK_CLIENT: '${KEYCLOAK_CLIENT:-ecards-frontend}',
-  API_URL: '${API_URL:-/api}'
+  API_URL: '${API_URL:-/api}',
+  SUPPORT_EMAIL: '${SUPPORT_EMAIL:-support@example.com}'
 };
 EOF
 

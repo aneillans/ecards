@@ -79,6 +79,7 @@ services:
       - KEYCLOAK_URL=https://auth.neillans.co.uk/
       - KEYCLOAK_REALM=eCards
       - KEYCLOAK_CLIENT=eCards
+      - SUPPORT_EMAIL=support@example.com
     depends_on:
       - api
     restart: unless-stopped
