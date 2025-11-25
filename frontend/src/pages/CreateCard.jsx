@@ -244,9 +244,7 @@ function CreateCard() {
         <div className="success-message">
           <h3>eCard Created Successfully!</h3>
           <p>
-            View your card: <a href={`/view/${success.id}`} target="_blank" rel="noopener noreferrer">
-              {window.location.origin}/view/{success.id}
-            </a>
+            <a href={`/view/${success.id}`} target="_blank" rel="noopener noreferrer">View your card here</a>
           </p>
           <p style={{marginTop: '1rem', fontSize: '0.9rem'}}>
             {success.scheduledSendDate && new Date(success.scheduledSendDate) > new Date() ? 
