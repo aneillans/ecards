@@ -15,8 +15,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-            ?? new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost:80", "http://localhost" };
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        
+        if (allowedOrigins == null || allowedOrigins.Length == 0)
+        {
+            builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>()
+                .LogWarning("No CORS origins configured. CORS will block all cross-origin requests.");
+            allowedOrigins = Array.Empty<string>();
+        }
         
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
@@ -117,6 +123,14 @@ builder.Services.AddHostedService<DataRetentionService>();
 builder.Services.AddHostedService<ScheduledSendingService>();
 
 var app = builder.Build();
+
+// Configure PathBase for reverse proxy scenarios (e.g., /api)
+var pathBase = builder.Configuration["PathBase"];
+if (!string.IsNullOrEmpty(pathBase))
+{
+    app.UsePathBase(pathBase);
+    app.Logger.LogInformation("Using PathBase: {PathBase}", pathBase);
+}
 
 // Auto-create database on startup BEFORE anything else runs
 using (var scope = app.Services.CreateScope())

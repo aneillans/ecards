@@ -113,7 +113,12 @@ public class EmailService : IEmailService
     
     public async Task SendECardNotificationAsync(Models.ECard card)
     {
-        var frontendUrl = _configuration["FrontendUrl"] ?? _configuration["BaseUrl"] ?? "http://localhost:80";
+        var frontendUrl = _configuration["FrontendUrl"] ?? _configuration["BaseUrl"];
+        if (string.IsNullOrEmpty(frontendUrl))
+        {
+            _logger.LogError("FrontendUrl or BaseUrl configuration is missing. Cannot generate view URL for card {CardId}", card.Id);
+            return;
+        }
         var viewUrl = $"{frontendUrl}/view/{card.Id}";
         var appName = _configuration["AppName"] ?? "eCards";
         
