@@ -87,6 +87,7 @@ services:
       - SOCIAL_DISCORD=
       - SOCIAL_GITHUB=
       - SOCIAL_MASTODON=
+      - SOCIAL_KOFI=
     volumes:
       # Optional: Mount custom blocked-agents.conf to override default AI crawler blocking
       # - ./blocked-agents.conf:/etc/nginx/blocked-agents.conf:ro
