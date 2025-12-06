@@ -157,6 +157,11 @@ function CreateCard() {
       };
       img.src = reader.result;
     };
+    reader.onerror = () => {
+      setError('Failed to read file.');
+      setCustomArt(null);
+      setPreviewUrl(null);
+    };
     reader.readAsDataURL(file);
   };
 
