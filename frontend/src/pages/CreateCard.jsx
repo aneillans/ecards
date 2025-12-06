@@ -21,6 +21,7 @@ function CreateCard() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [uploadLimits, setUploadLimits] = useState({ maxUploadBytes: 5 * 1024 * 1024, maxImageDimension: 1600 });
   const [premadeTemplates, setPremadeTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [myCards, setMyCards] = useState([]);
@@ -44,10 +45,24 @@ function CreateCard() {
       senderName: parsed.name || parsed.given_name || ''
     }));
 
+    // Fetch upload limits
+    const fetchLimits = async () => {
+      try {
+        const response = await api.get('/ecards/config');
+        setUploadLimits({
+          maxUploadBytes: response.data?.maxUploadBytes || 5 * 1024 * 1024,
+          maxImageDimension: response.data?.maxImageDimension || 1600
+        });
+      } catch (err) {
+        console.error('Error fetching upload limits:', err);
+      }
+    };
+
     // Fetch user's sent cards
     if (email) {
       fetchMyCards(email);
     }
+    fetchLimits();
   }, [navigate]);
 
   const fetchMyCards = async (email) => {
@@ -95,18 +110,63 @@ function CreateCard() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const formatBytes = (bytes) => {
+    if (!bytes) return '';
+    const sizes = ['bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setCustomArt(file);
-      // Clear premade selection when uploading custom art
-      setFormData(prev => ({ ...prev, premadeArtId: '' }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
+    if (!file) {
+      setCustomArt(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    const maxBytes = uploadLimits.maxUploadBytes || 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setError(`File is too large. Maximum allowed is ${formatBytes(maxBytes)}.`);
+      setCustomArt(null);
+      setPreviewUrl(null);
+      e.target.value = '';
+      return;
+    }
+
+    // Clear premade selection when uploading custom art
+    setFormData(prev => ({ ...prev, premadeArtId: '' }));
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = uploadLimits.maxImageDimension || 1600;
+        if (maxDim && (img.width > maxDim || img.height > maxDim)) {
+          setError(`Image dimensions are too large (${img.width}x${img.height}). Max allowed is ${maxDim}px on the longest side.`);
+          setCustomArt(null);
+          setPreviewUrl(null);
+          e.target.value = '';
+          return;
+        }
+        setError(null);
+        setCustomArt(file);
         setPreviewUrl(reader.result);
       };
-      reader.readAsDataURL(file);
-    }
+      img.onerror = () => {
+        setError('Could not read the selected image.');
+        setCustomArt(null);
+        setPreviewUrl(null);
+        e.target.value = '';
+      };
+      img.src = reader.result;
+    };
+    reader.onerror = () => {
+      setError('Failed to read file.');
+      setCustomArt(null);
+      setPreviewUrl(null);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleTemplateSelect = (templateId) => {
@@ -350,6 +410,12 @@ function CreateCard() {
 
         <div className="form-group">
           <label>Or Upload Custom Artwork</label>
+          <p className="help-text">
+            Max size {formatBytes(uploadLimits.maxUploadBytes)}
+            {uploadLimits.maxImageDimension > 0 && (
+              <>; images larger than {uploadLimits.maxImageDimension}px on the longest side are not allowed.</>
+            )}
+          </p>
           <div className="file-upload" onClick={() => document.getElementById('fileInput').click()}>
             <input
               id="fileInput"

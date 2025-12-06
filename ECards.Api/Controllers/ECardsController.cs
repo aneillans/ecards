@@ -2,6 +2,7 @@ using ECards.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace ECards.Api.Controllers;
 
@@ -13,17 +14,20 @@ public class ECardsController : ControllerBase
     private readonly Services.IFileStorageService _fileStorage;
     private readonly ILogger<ECardsController> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IOptions<Services.StorageOptions> _storageOptions;
     
     public ECardsController(
         Data.ECardsDbContext context, 
         Services.IFileStorageService fileStorage,
         ILogger<ECardsController> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IOptions<Services.StorageOptions> storageOptions)
     {
         _context = context;
         _fileStorage = fileStorage;
         _logger = logger;
         _configuration = configuration;
+        _storageOptions = storageOptions;
     }
     
     [HttpGet("config")]
@@ -32,9 +36,12 @@ public class ECardsController : ControllerBase
     {
         var appName = _configuration["AppName"];
         _logger.LogInformation("AppName from config: {AppName}", appName ?? "NULL");
+        var storage = _storageOptions.Value;
         return new
         {
-            appName = appName ?? "eCards"
+            appName = appName ?? "eCards",
+            maxUploadBytes = storage.MaxUploadBytes,
+            maxImageDimension = storage.MaxImageDimension
         };
     }
     
@@ -123,10 +130,26 @@ public class ECardsController : ControllerBase
         // Handle custom art upload
         if (request.CustomArt != null)
         {
-            var artPath = await _fileStorage.SaveCustomArtAsync(
-                request.CustomArt.OpenReadStream(), 
-                request.CustomArt.FileName);
-            ecard.CustomArtPath = artPath;
+            var maxBytes = _storageOptions.Value.MaxUploadBytes > 0
+                ? _storageOptions.Value.MaxUploadBytes
+                : 5 * 1024 * 1024;
+            if (request.CustomArt.Length > maxBytes)
+            {
+                return BadRequest($"File too large. Max allowed is {(maxBytes / 1024.0 / 1024.0):0.0} MB.");
+            }
+
+            try
+            {
+                var artPath = await _fileStorage.SaveCustomArtAsync(
+                    request.CustomArt.OpenReadStream(), 
+                    request.CustomArt.FileName);
+                ecard.CustomArtPath = artPath;
+            }
+            catch (InvalidDataException ex)
+            {
+                _logger.LogWarning(ex, "Invalid custom art upload");
+                return BadRequest(ex.Message);
+            }
         }
         
         // Calculate expiry date
