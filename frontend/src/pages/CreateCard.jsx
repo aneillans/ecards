@@ -129,6 +129,7 @@ function CreateCard() {
       setError(`File is too large. Maximum allowed is ${formatBytes(maxBytes)}.`);
       setCustomArt(null);
       setPreviewUrl(null);
+      e.target.value = '';
       return;
     }
 
@@ -144,6 +145,7 @@ function CreateCard() {
           setError(`Image dimensions are too large (${img.width}x${img.height}). Max allowed is ${maxDim}px on the longest side.`);
           setCustomArt(null);
           setPreviewUrl(null);
+          e.target.value = '';
           return;
         }
         setError(null);
@@ -154,6 +156,7 @@ function CreateCard() {
         setError('Could not read the selected image.');
         setCustomArt(null);
         setPreviewUrl(null);
+        e.target.value = '';
       };
       img.src = reader.result;
     };
