@@ -1,3 +1,8 @@
+using Microsoft.Extensions.Options;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Processing;
+
 namespace ECards.Api.Services;
 
 public interface IFileStorageService
@@ -13,14 +18,16 @@ public class LocalFileStorageService : IFileStorageService
     private readonly string _customArtPath;
     private readonly string _premadeArtPath;
     private readonly ILogger<LocalFileStorageService> _logger;
+    private readonly int _maxImageDimension;
     
-    public LocalFileStorageService(IConfiguration configuration, ILogger<LocalFileStorageService> logger)
+    public LocalFileStorageService(IOptions<StorageOptions> options, ILogger<LocalFileStorageService> logger)
     {
         _logger = logger;
-        _customArtPath = configuration["Storage:CustomArtPath"] ?? "/app/storage/custom";
-        _premadeArtPath = configuration["Storage:PremadeArtPath"] ?? "/app/storage/premade";
+        var opts = options.Value ?? new StorageOptions();
+        _customArtPath = string.IsNullOrWhiteSpace(opts.CustomArtPath) ? "/app/storage/custom" : opts.CustomArtPath;
+        _premadeArtPath = string.IsNullOrWhiteSpace(opts.PremadeArtPath) ? "/app/storage/premade" : opts.PremadeArtPath;
+        _maxImageDimension = opts.MaxImageDimension > 0 ? opts.MaxImageDimension : 0;
         
-        // Ensure directories exist
         Directory.CreateDirectory(_customArtPath);
         Directory.CreateDirectory(_premadeArtPath);
     }
@@ -28,12 +35,39 @@ public class LocalFileStorageService : IFileStorageService
     public async Task<string> SaveCustomArtAsync(Stream fileStream, string fileName)
     {
         var safeFileName = Path.GetFileName(fileName);
-        var uniqueFileName = $"{Guid.NewGuid()}_{safeFileName}";
+        var ext = Path.GetExtension(safeFileName);
+        var baseName = Path.GetFileNameWithoutExtension(safeFileName);
+        if (string.IsNullOrWhiteSpace(baseName)) baseName = "upload";
+        var uniqueSuffix = Guid.NewGuid().ToString("N");
+        var uniqueFileName = $"{baseName}_{uniqueSuffix}{ext}";
         var filePath = Path.Combine(_customArtPath, uniqueFileName);
         
-        using var fileStreamOutput = File.Create(filePath);
-        await fileStream.CopyToAsync(fileStreamOutput);
-        
+        try
+        {
+            using var image = await Image.LoadAsync(fileStream, out IImageFormat format);
+            if (_maxImageDimension > 0 && (image.Width > _maxImageDimension || image.Height > _maxImageDimension))
+            {
+                var target = new Size(_maxImageDimension, _maxImageDimension);
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = target
+                }));
+            }
+            await using var output = File.Create(filePath);
+            await image.SaveAsync(output, format);
+        }
+        catch (UnknownImageFormatException ex)
+        {
+            _logger.LogWarning(ex, "Unsupported image format for {FileName}", safeFileName);
+            throw new InvalidDataException("Unsupported image format", ex);
+        }
+        catch (ImageFormatException ex)
+        {
+            _logger.LogWarning(ex, "Invalid image data for {FileName}", safeFileName);
+            throw new InvalidDataException("Invalid image data", ex);
+        }
+
         _logger.LogInformation("Saved custom art to {FilePath}", filePath);
         return filePath;
     }
@@ -42,7 +76,6 @@ public class LocalFileStorageService : IFileStorageService
     {
         if (!File.Exists(path))
         {
-            // Try premade art
             var premadePath = Path.Combine(_premadeArtPath, path);
             if (File.Exists(premadePath))
             {

@@ -10,6 +10,9 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Bind options
+builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
