@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
 
 namespace ECards.Api.Services;
@@ -44,7 +45,8 @@ public class LocalFileStorageService : IFileStorageService
         
         try
         {
-            using var image = await Image.LoadAsync(fileStream, out IImageFormat format);
+            using var image = await Image.LoadAsync(fileStream);
+            IImageFormat format = image.Metadata.DecodedImageFormat ?? PngFormat.Instance;
             if (_maxImageDimension > 0 && (image.Width > _maxImageDimension || image.Height > _maxImageDimension))
             {
                 var target = new Size(_maxImageDimension, _maxImageDimension);
