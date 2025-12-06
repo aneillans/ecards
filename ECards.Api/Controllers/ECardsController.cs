@@ -135,7 +135,7 @@ public class ECardsController : ControllerBase
                 : 5 * 1024 * 1024;
             if (request.CustomArt.Length > maxBytes)
             {
-                return BadRequest($"File too large. Max allowed is {maxBytes / 1024 / 1024} MB.");
+                return BadRequest($"File too large. Max allowed is {(maxBytes / 1024.0 / 1024.0):0.0} MB.");
             }
 
             try
