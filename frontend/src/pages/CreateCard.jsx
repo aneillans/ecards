@@ -402,7 +402,10 @@ function CreateCard() {
         <div className="form-group">
           <label>Or Upload Custom Artwork</label>
           <p className="help-text">
-            Max size {formatBytes(uploadLimits.maxUploadBytes)}; images larger than {uploadLimits.maxImageDimension}px on the longest side are not allowed.
+            Max size {formatBytes(uploadLimits.maxUploadBytes)}
+            {uploadLimits.maxImageDimension > 0 && (
+              <>; images larger than {uploadLimits.maxImageDimension}px on the longest side are not allowed.</>
+            )}
           </p>
           <div className="file-upload" onClick={() => document.getElementById('fileInput').click()}>
             <input
