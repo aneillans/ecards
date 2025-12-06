@@ -45,24 +45,25 @@ function CreateCard() {
       senderName: parsed.name || parsed.given_name || ''
     }));
 
+    // Fetch upload limits
+    const fetchLimits = async () => {
+      try {
+        const response = await api.get('/ecards/config');
+        setUploadLimits({
+          maxUploadBytes: response.data?.maxUploadBytes || 5 * 1024 * 1024,
+          maxImageDimension: response.data?.maxImageDimension || 1600
+        });
+      } catch (err) {
+        console.error('Error fetching upload limits:', err);
+      }
+    };
+
     // Fetch user's sent cards
     if (email) {
       fetchMyCards(email);
     }
     fetchLimits();
   }, [navigate]);
-
-  const fetchLimits = async () => {
-    try {
-      const response = await api.get('/ecards/config');
-      setUploadLimits({
-        maxUploadBytes: response.data?.maxUploadBytes || 5 * 1024 * 1024,
-        maxImageDimension: response.data?.maxImageDimension || 1600
-      });
-    } catch (err) {
-      console.error('Error fetching upload limits:', err);
-    }
-  };
 
   const fetchMyCards = async (email) => {
     try {
