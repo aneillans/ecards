@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM dhi.io/aspnetcore:10-alpine3.22 AS base
 WORKDIR /app
 EXPOSE 8080
 
@@ -11,12 +11,10 @@ RUN dotnet build "ECards.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
 RUN dotnet publish "ECards.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN mkdir -p /app/publish/storage/custom /app/publish/storage/premade
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-
-# Create storage directories
-RUN mkdir -p /app/storage/custom /app/storage/premade
 
 ENTRYPOINT ["dotnet", "ECards.Api.dll"]

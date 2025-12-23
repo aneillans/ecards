@@ -14,8 +14,8 @@ COPY . .
 # Build the app
 RUN npm run build
 
-# Production stage with nginx
-FROM nginx:alpine
+# Production stage with hardened nginx
+FROM dhi.io/nginx:1-alpine3.21
 
 # Copy built files
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -28,8 +28,7 @@ COPY blocked-agents.conf /etc/nginx/blocked-agents.conf.default
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/docker-entrypoint.sh"]
