@@ -14,8 +14,8 @@ COPY . .
 # Build the app
 RUN npm run build
 
-# Production stage with nginx
-FROM nginx:alpine
+# Production stage with hardened nginx
+FROM dhi.io/nginx:1-alpine3.21
 
 # Copy built files
 COPY --from=build /app/dist /usr/share/nginx/html

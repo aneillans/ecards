@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM dhi.io/aspnetcore:10-alpine3.22 AS base
 WORKDIR /app
 EXPOSE 8080
 
