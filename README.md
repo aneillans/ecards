@@ -2,6 +2,14 @@
 
 A self-hosted eCard application with a .NET 10 backend API and React/Vite frontend.
 
+## Docker Images
+
+Docker images for this project can be found on my public repo: 
+
+https://packages.neillans.co.uk/containers/registry?feedId=2
+
+This Proget server is available through the generosity of Inedo providing a license for Open Source projects.
+
 ## Quick Start
 
 ```bash
