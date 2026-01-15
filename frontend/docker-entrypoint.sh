@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# Ensure nginx user has write access to html directory
+chmod 755 /usr/share/nginx/html
+
 # Generate config.js from environment variables
 cat > /usr/share/nginx/html/config.js <<EOF
 // Runtime configuration - injected by container startup
