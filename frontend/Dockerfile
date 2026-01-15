@@ -29,6 +29,9 @@ COPY blocked-agents.conf /etc/nginx/blocked-agents.conf.default
 # Copy entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
+# Ensure nginx user can write to html directory for runtime config generation
+RUN chown -R nginx:nginx /usr/share/nginx/html
+
 EXPOSE 80
 
 ENTRYPOINT ["/bin/sh", "/docker-entrypoint.sh"]
