@@ -1,11 +1,12 @@
 #!/bin/sh
 set -e
 
-# Ensure nginx user has write access to html directory
-chmod 755 /usr/share/nginx/html
-
 # Generate config.js from environment variables
-cat > /usr/share/nginx/html/config.js <<EOF
+# Try to write to /usr/share/nginx/html first; if it fails due to immutable FS, write to /tmp
+CONFIG_FILE="/usr/share/nginx/html/config.js"
+TMP_CONFIG="/tmp/config.js"
+
+cat > "$TMP_CONFIG" <<EOF
 // Runtime configuration - injected by container startup
 window.ENV = {
   KEYCLOAK_URL: '${KEYCLOAK_URL:-https://your-keycloak.example/}',
@@ -23,8 +24,14 @@ window.ENV = {
 };
 EOF
 
-echo "Generated runtime config:"
-cat /usr/share/nginx/html/config.js
+# Try to move to final location; if it fails, nginx will serve from /tmp via alias
+if cp "$TMP_CONFIG" "$CONFIG_FILE" 2>/dev/null; then
+  echo "Generated runtime config at $CONFIG_FILE"
+  cat "$CONFIG_FILE"
+else
+  echo "Cannot write to $CONFIG_FILE (immutable FS), config.js will be served from /tmp"
+  echo "Ensure nginx.conf has: location = /config.js { alias /tmp/config.js; }"
+fi
 
 # Copy default blocked agents config if not already present (not mounted)
 if [ ! -f /etc/nginx/blocked-agents.conf ]; then
