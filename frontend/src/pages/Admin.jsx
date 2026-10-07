@@ -18,7 +18,9 @@ export default function Admin(){
     }catch(err){ setError(err.response?.data?.message || err.message); }
   }
 
-  useEffect(()=>{ let mounted = true; if (mounted) loadAll(); return ()=> mounted = false; }, []);
+  // loadAll only sets state after awaiting the API, so it cannot cascade renders
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(()=>{ loadAll(); }, []);
 
   function beginCreate(){
     setEditing('create');

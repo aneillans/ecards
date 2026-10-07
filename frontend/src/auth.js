@@ -35,8 +35,7 @@ export async function initAuth() {
       checkLoginIframe: false, // Disable iframe check completely
       enableLogging: true, // Enable Keycloak logging for debugging
       flow: 'standard', // Use standard flow
-      silentCheckSsoFallback: false, // Don't use iframe fallback
-      promiseType: 'native'
+      silentCheckSsoFallback: false // Don't use iframe fallback
     });
     
     initialized = true;

@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isLoggedIn, login, tokenParsed } from '../auth';
+import { isLoggedIn, tokenParsed } from '../auth';
 import api from '../api';
 
 function CreateCard() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    senderName: '',
-    senderEmail: '',
+  // Pre-fill sender info from token
+  const [userEmail] = useState(() => {
+    const parsed = tokenParsed();
+    return parsed.email || parsed.preferred_username || '';
+  });
+  const [formData, setFormData] = useState(() => ({
+    senderName: tokenParsed().name || tokenParsed().given_name || '',
+    senderEmail: userEmail,
     recipientName: '',
     recipientEmail: '',
     message: '',
     scheduledSendDate: '',
     sendNow: true,
     premadeArtId: ''
-  });
+  }));
   
   const [customArt, setCustomArt] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -25,7 +30,15 @@ function CreateCard() {
   const [premadeTemplates, setPremadeTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [myCards, setMyCards] = useState([]);
-  const [userEmail, setUserEmail] = useState('');
+
+  const fetchMyCards = async (email) => {
+    try {
+      const response = await api.get(`/ecards/my-cards?email=${encodeURIComponent(email)}`);
+      setMyCards(response.data);
+    } catch (err) {
+      console.error('Error fetching cards:', err);
+    }
+  };
 
   // Check authentication on mount
   useEffect(() => {
@@ -34,16 +47,6 @@ function CreateCard() {
       navigate('/');
       return;
     }
-    
-    // Pre-fill sender info from token
-    const parsed = tokenParsed();
-    const email = parsed.email || parsed.preferred_username || '';
-    setUserEmail(email);
-    setFormData(prev => ({
-      ...prev,
-      senderEmail: email,
-      senderName: parsed.name || parsed.given_name || ''
-    }));
 
     // Fetch upload limits
     const fetchLimits = async () => {
@@ -59,20 +62,13 @@ function CreateCard() {
     };
 
     // Fetch user's sent cards
-    if (email) {
-      fetchMyCards(email);
+    if (userEmail) {
+      // fetchMyCards only sets state after awaiting the API
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchMyCards(userEmail);
     }
     fetchLimits();
-  }, [navigate]);
-
-  const fetchMyCards = async (email) => {
-    try {
-      const response = await api.get(`/ecards/my-cards?email=${encodeURIComponent(email)}`);
-      setMyCards(response.data);
-    } catch (err) {
-      console.error('Error fetching cards:', err);
-    }
-  };
+  }, [navigate, userEmail]);
 
   const handleResendEmail = async (cardId) => {
     if (!confirm('Resend email notification for this card?')) return;
