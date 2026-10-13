@@ -4,7 +4,7 @@ import Welcome from './pages/Welcome';
 import CreateCard from './pages/CreateCard';
 import ViewCard from './pages/ViewCard';
 import Admin from './pages/Admin';
-import { initAuth, login, logout, isLoggedIn, hasRole } from './auth';
+import { initAuth, login, logout, hasRole } from './auth';
 import api from './api';
 import './App.css'
 

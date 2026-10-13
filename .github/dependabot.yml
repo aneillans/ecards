@@ -9,8 +9,26 @@ updates:
     directory: "/frontend" # Location of package manifests
     schedule:
       interval: "weekly"
-      
-  - package-ecosystem: "dotnet-sdk" # See documentation for possible values
-    directory: "/ECards.Api" # Location of package manifests
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "nuget"
+    directory: "/ECards.Api"
+    schedule:
+      interval: "weekly"
+    groups:
+      nuget-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/ECards.Api"
+      - "/frontend"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
