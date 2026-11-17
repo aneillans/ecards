@@ -2,7 +2,7 @@ FROM dhi.io/aspnetcore:10-alpine3.22 AS base
 WORKDIR /app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 COPY ["ECards.Api.csproj", "./"]
 RUN dotnet restore "ECards.Api.csproj"
